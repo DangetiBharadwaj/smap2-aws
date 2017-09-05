@@ -39,6 +39,7 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.MessageAttributeValue;
 
+import model.DeviceTable;
 import tools.AmazonSNSClientWrapper;
 import tools.SampleMessageGenerator.Platform;
 
@@ -68,12 +69,12 @@ public class EmitDeviceNotification {
 
 	private static Logger log = Logger.getLogger(EmitDeviceNotification.class.getName());
 
-    private AmazonDynamoDB dynamoDB;
     private AmazonSNSClientWrapper snsClientWrapper;
 	Properties properties = new Properties();
 	String tableName = null;
 	String region = null;
 	String platformApplicationArn = null;
+	AmazonSNS sns = null;
 
 	public EmitDeviceNotification() {
 		
@@ -86,22 +87,12 @@ public class EmitDeviceNotification {
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Error reading properties", e);
 		}
-            
-		//create a new DynamoDB client
-		dynamoDB = AmazonDynamoDBClient.builder()
-				.withRegion(region)
-				.withCredentials(new ProfileCredentialsProvider())
-				.build();
 		
 		//create a new SNS client
-		AmazonSNS sns = AmazonSNSClient.builder()
+		sns = AmazonSNSClient.builder()
 				.withRegion(region)
 				.withCredentials(new ProfileCredentialsProvider())
 				.build();
-		
-		// create a wraper
-		snsClientWrapper = new AmazonSNSClientWrapper(sns);
-
 	}
 
 	/*
@@ -114,30 +105,23 @@ public class EmitDeviceNotification {
 			server = "dev.smap.com.au";
 		}
 		
-		// Get registration entries for this user
-		 HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-         Condition conditionServer = new Condition()
-             .withComparisonOperator(ComparisonOperator.EQ.toString())
-             .withAttributeValueList(new AttributeValue().withS(server));
-         Condition conditionUser = new Condition()
-                 .withComparisonOperator(ComparisonOperator.EQ.toString())
-                 .withAttributeValueList(new AttributeValue().withS(user));
-         scanFilter.put("smapServer", conditionServer);
-         scanFilter.put("userIdent", conditionUser);
-         ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-         ScanResult scanResult = dynamoDB.scan(scanRequest);
+		// Get the device registration ids associated with this user on this server
+		DeviceTable deviceTable = new DeviceTable(region, tableName);
+		ScanResult scanResult = deviceTable.getUserDevices(server, user);
 		 
          // Process the results
+		snsClientWrapper = new AmazonSNSClientWrapper(sns, deviceTable);
          List<Map<String, AttributeValue>> items = scanResult.getItems();
          if(items!= null && items.size() > 0) {
         	 	for(Map<String, AttributeValue> item : items) {
         	 		AttributeValue val = item.get("registrationId");
         	 		String token = val.getS();
+        	 		
         	 		System.out.println("Token: " + token + " for " + server + ":" + user);
         	 		
         	        // Send the notification
         	 		Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
-        	 		snsClientWrapper.demoNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
+        	 		snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
         	 		
         	 	}
          } else {
