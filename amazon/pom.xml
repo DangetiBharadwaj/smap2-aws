@@ -30,7 +30,7 @@
 			<dependency>
 				<groupId>com.amazonaws</groupId>
 				<artifactId>aws-java-sdk-bom</artifactId>
-				<version>1.11.171</version>
+				<version>1.11.207</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
@@ -58,5 +58,14 @@
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-sns</artifactId>
 		</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/com.amazonaws/aws-java-sdk-rekognition -->
+		<dependency>
+		    <groupId>com.amazonaws</groupId>
+		    <artifactId>aws-java-sdk-rekognition</artifactId>
+		    <version>1.11.207</version>
+		</dependency>
+
+		
 	</dependencies>
 </project>
