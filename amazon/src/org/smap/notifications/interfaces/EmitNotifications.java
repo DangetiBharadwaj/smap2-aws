@@ -76,6 +76,7 @@ public class EmitNotifications {
 		} else {
 			log.info("Error: Publish: invalid event: " + event);
 		}
+		log.info("Topic: " + topic);
 		
 		return topic;
 	}
