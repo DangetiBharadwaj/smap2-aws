@@ -37,12 +37,16 @@ public class EmitNotifications {
 	Properties properties = new Properties();
 	
 	public EmitNotifications() {
+		FileInputStream fis = null;
 		try {
-				properties.load(new FileInputStream("/smap_bin/resources/properties/aws.properties"));
-			}
-			catch (Exception e) { 
-				log.log(Level.SEVERE, "Error reading properties", e);
-			}
+			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
+			properties.load(fis);
+		}
+		catch (Exception e) { 
+			log.log(Level.SEVERE, "Error reading properties", e);
+		} finally {
+			try {fis.close();} catch (Exception e) {}
+		}
 	}
 	
 	/*

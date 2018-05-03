@@ -45,13 +45,18 @@ public class ImageProcessing {
 	public ImageProcessing() {
 		
 		// get properties file
+		
+		FileInputStream fis = null;
 		try {
-			properties.load(new FileInputStream("/smap_bin/resources/properties/aws.properties"));
+			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
+			properties.load(fis);
 			tableName = properties.getProperty("userDevices_table");
 			region = properties.getProperty("userDevices_region");
 			platformApplicationArn = properties.getProperty("fieldTask_platform");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Error reading properties", e);
+		} finally {
+			try {fis.close();} catch (Exception e) {}
 		}
 		
 		//create a new S3 client
