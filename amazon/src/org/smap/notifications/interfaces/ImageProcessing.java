@@ -34,7 +34,6 @@ public class ImageProcessing {
 
 	private static Logger log = Logger.getLogger(ImageProcessing.class.getName());
 
-    private AmazonSNSClientWrapper snsClientWrapper;
 	Properties properties = new Properties();
 	String tableName = null;
 	String region = null;
@@ -112,11 +111,6 @@ public class ImageProcessing {
 		} else {
 			labels.append("Error: image not found");
 		}
-		// Upload the file to the image recognition bucket if it is not already there
-		 
-         // Get the labels
-	
-		// Apply results
 		
 		return labels.toString();
 		

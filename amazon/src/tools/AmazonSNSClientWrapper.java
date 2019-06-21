@@ -75,7 +75,7 @@ public class AmazonSNSClientWrapper {
 		publishRequest.setTargetArn(endpointArn);
 
 		// Display the message that will be sent to the endpoint/
-		System.out.println("{Message Body: " + message + "}");
+		log.info("{Message Body: " + message + "}");
 		StringBuilder builder = new StringBuilder();
 		builder.append("{Message Attributes: ");
 		for (Map.Entry<String, MessageAttributeValue> entry : notificationAttributes.entrySet()) {
@@ -83,7 +83,7 @@ public class AmazonSNSClientWrapper {
 		}
 		builder.deleteCharAt(builder.length() - 1);
 		builder.append("}");
-		System.out.println(builder.toString());
+		log.info(builder.toString());
 
 		publishRequest.setMessage(message);
 
@@ -91,7 +91,7 @@ public class AmazonSNSClientWrapper {
 		try {
 			result = snsClient.publish(publishRequest);
 		} catch (EndpointDisabledException e) {
-			log.info("End point disabled " + endpointArn + " deleting");
+			log.info("End point disabled " + endpointArn + " deleting. " + e.getMessage());
 			deviceTable.deleteToken(platformToken);
 			deleteEndpoint(endpointArn);
 		} catch (Exception e) {

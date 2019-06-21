@@ -34,7 +34,7 @@ public class EmitDeviceNotification {
 
 	private static Logger log = Logger.getLogger(EmitDeviceNotification.class.getName());
 
-    private AmazonSNSClientWrapper snsClientWrapper;
+	private AmazonSNSClientWrapper snsClientWrapper;
 	Properties properties = new Properties();
 	String tableName = null;
 	String region = null;
@@ -42,7 +42,7 @@ public class EmitDeviceNotification {
 	AmazonSNS sns = null;
 
 	public EmitDeviceNotification() {
-		
+
 		// get properties file
 		FileInputStream fis = null;
 		try {
@@ -56,7 +56,7 @@ public class EmitDeviceNotification {
 		} finally {
 			try {fis.close();} catch(Exception e) {}
 		}
-		
+
 		//create a new SNS client
 		sns = AmazonSNSClient.builder()
 				.withRegion(region)
@@ -68,35 +68,37 @@ public class EmitDeviceNotification {
 	 * Send a message to users registered with a server, name combo
 	 */
 	public void notify(String server, String user) {
-		
+
 		// For testing on local host - can leave in final code
-		if(server.equals("smap")) {
+		if(server.equals("localhost")) {
 			server = "dev.smap.com.au";
 		}
-		
+
 		// Get the device registration ids associated with this user on this server
 		DeviceTable deviceTable = new DeviceTable(region, tableName);
 		ScanResult scanResult = deviceTable.getUserDevices(server, user);
-		 
-         // Process the results
+
+
+		// Process the results
 		snsClientWrapper = new AmazonSNSClientWrapper(sns, deviceTable);
-         List<Map<String, AttributeValue>> items = scanResult.getItems();
-         if(items!= null && items.size() > 0) {
-        	 	for(Map<String, AttributeValue> item : items) {
-        	 		AttributeValue val = item.get("registrationId");
-        	 		String token = val.getS();
-        	 		
-        	 		System.out.println("Token: " + token + " for " + server + ":" + user);
-        	 		
-        	        // Send the notification
-        	 		Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
-        	 		snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
-        	 		
-        	 	}
-         } else {
-        	 	log.info("No token found for: " + server + ":" + user);
-         }
-		
+		List<Map<String, AttributeValue>> items = scanResult.getItems();
+		log.info("Number of items: " + items.size());
+		if(items!= null && items.size() > 0) {
+			for(Map<String, AttributeValue> item : items) {
+				AttributeValue val = item.get("registrationId");
+				String token = val.getS();
+
+				log.info("Token: " + token + " for " + server + ":" + user);
+
+				// Send the notification
+				Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
+				snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
+
+			}
+		} else {
+			log.info("No token found for: " + server + ":" + user);
+		}
+
 	}
 
 }
