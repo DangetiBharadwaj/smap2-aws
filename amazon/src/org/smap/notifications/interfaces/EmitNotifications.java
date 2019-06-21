@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.PublishRequest;
@@ -57,7 +58,7 @@ public class EmitNotifications {
 		//create a new SNS client
 		AmazonSNS sns = AmazonSNSClient.builder()
 				.withRegion("ap-southeast-1")
-				.withCredentials(new ClasspathPropertiesFileCredentialsProvider())
+				.withCredentials(new DefaultAWSCredentialsProviderChain())
 				.build();
 		
 		String topic = getTopic(event);
