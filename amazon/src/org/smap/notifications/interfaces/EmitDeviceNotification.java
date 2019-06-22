@@ -78,10 +78,10 @@ public class EmitDeviceNotification {
 		DeviceTable deviceTable = new DeviceTable(region, tableName);
 		ScanResult scanResult = deviceTable.getUserDevices(server, user);
 
-
 		// Process the results
 		snsClientWrapper = new AmazonSNSClientWrapper(sns, deviceTable);
 		List<Map<String, AttributeValue>> items = scanResult.getItems();
+		log.info("Scan result: " + scanResult.toString());
 		log.info("Number of items: " + items.size());
 		if(items!= null && items.size() > 0) {
 			for(Map<String, AttributeValue> item : items) {

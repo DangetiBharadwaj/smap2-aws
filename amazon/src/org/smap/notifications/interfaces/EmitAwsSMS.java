@@ -1,0 +1,112 @@
+package org.smap.notifications.interfaces;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
+import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.model.MessageAttributeValue;
+import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.PublishResult;
+
+
+
+/*****************************************************************************
+
+This file is part of SMAP.
+
+Copyright Smap Pty Ltd
+
+ ******************************************************************************/
+
+/*
+ * Manage the table that stores details on the forwarding of data onto other systems
+ */
+public class EmitAwsSMS extends EmitSMS {
+	
+	/*
+	 * Events
+	 */
+	public static int AWS_REGISTER_ORGANISATION = 0;
+	
+	private static Logger log =
+			 Logger.getLogger(EmitAwsSMS.class.getName());
+	
+	Properties properties = new Properties();
+	String senderId = "smap";
+	
+	public EmitAwsSMS(String senderId) {
+		if(senderId != null) {
+			this.senderId = senderId;
+		}
+		
+		FileInputStream fis = null;
+		try {
+			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
+			properties.load(fis);
+		}
+		catch (Exception e) { 
+			log.log(Level.SEVERE, "Error reading properties", e);
+		} finally {
+			try {fis.close();} catch (Exception e) {}
+		}
+	}
+	
+	// Send an email
+	@Override
+	public String sendSMS( 
+			String number, 
+			String content) throws Exception  {
+		
+		String responseBody = null;
+		
+		if(!isValidPhoneNumber(number)) {
+			throw new Exception("Invalid phone number: " + number);
+		}
+		
+		//create a new SNS client
+		AmazonSNS sns = AmazonSNSClient.builder()
+				.withRegion("ap-southeast-1")
+				.withCredentials(new DefaultAWSCredentialsProviderChain())
+				.build();	
+	
+		Map<String, MessageAttributeValue> smsAttributes = 
+                new HashMap<String, MessageAttributeValue>();
+		smsAttributes.put("AWS.SNS.SMS.SenderID", new MessageAttributeValue()
+		        .withStringValue(senderId) //The sender ID shown on the device.
+		        .withDataType("String"));
+		
+        sendSMSMessage(sns, content, number, smsAttributes);
+		
+		return responseBody;
+	}
+	
+	private void sendSMSMessage(AmazonSNS snsClient, String message, 
+			String phoneNumber, Map<String, MessageAttributeValue> smsAttributes) {
+	        PublishResult result = snsClient.publish(new PublishRequest()
+	                        .withMessage(message)
+	                        .withPhoneNumber(phoneNumber)
+	                        .withMessageAttributes(smsAttributes));
+	        System.out.println(result); // Prints the message ID.
+	}
+
+}
+
+

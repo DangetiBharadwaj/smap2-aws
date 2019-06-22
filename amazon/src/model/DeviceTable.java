@@ -1,7 +1,9 @@
 package model;
 
 import java.util.HashMap;
+import java.util.logging.Logger;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
@@ -14,20 +16,22 @@ import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
 import com.amazonaws.services.dynamodbv2.model.ScanRequest;
 import com.amazonaws.services.dynamodbv2.model.ScanResult;
-import com.amazonaws.services.sns.model.DeleteEndpointRequest;
 
 public class DeviceTable {
 
 	private AmazonDynamoDB client;
 	private DynamoDB dynamoDB;
 	private String tableName;
+	
+	private static Logger log = Logger.getLogger(DeviceTable.class.getName());
 
 	public DeviceTable(String region, String tableName) {
 		// create a new DynamoDB client
-		client= AmazonDynamoDBClient.builder().withRegion(region).withCredentials(new ProfileCredentialsProvider())
+		client= AmazonDynamoDBClient.builder().withRegion(region).withCredentials(new DefaultAWSCredentialsProviderChain())
 				.build();
 		dynamoDB = new DynamoDB(client);
 		this.tableName = tableName;
+		log.info("DeviceTable: " + region + " : " + tableName);
 	}
 
 	public ScanResult getUserDevices(String server, String user) {
@@ -40,6 +44,7 @@ public class DeviceTable {
 		scanFilter.put("smapServer", conditionServer);
 		scanFilter.put("userIdent", conditionUser);
 		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
+		log.info("scan: " + tableName + " with: " + scanFilter.toString());
 		ScanResult scanResult = client.scan(scanRequest);
 
 		return scanResult;
