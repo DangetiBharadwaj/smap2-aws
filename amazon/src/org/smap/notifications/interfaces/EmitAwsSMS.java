@@ -1,24 +1,12 @@
 package org.smap.notifications.interfaces;
 
 import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-
-import com.amazonaws.auth.ClasspathPropertiesFileCredentialsProvider;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
@@ -26,13 +14,11 @@ import com.amazonaws.services.sns.model.MessageAttributeValue;
 import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sns.model.PublishResult;
 
-
-
 /*****************************************************************************
 
 This file is part of SMAP.
 
-Copyright Smap Pty Ltd
+Copyright Smap Consulting Pty Ltd
 
  ******************************************************************************/
 
@@ -104,7 +90,7 @@ public class EmitAwsSMS extends EmitSMS {
 	                        .withMessage(message)
 	                        .withPhoneNumber(phoneNumber)
 	                        .withMessageAttributes(smsAttributes));
-	        System.out.println(result); // Prints the message ID.
+	        log.info("Message Id:" + result); // Prints the message ID.
 	}
 
 }
