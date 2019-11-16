@@ -27,12 +27,17 @@ public abstract class EmitSMS {
 	/*
 	 * Validate an email
 	 */
-	protected boolean isValidPhoneNumber(String number) {
+	protected boolean isValidPhoneNumber(String number, boolean aws) {
 		boolean isValid = true;
 		if(number == null) {
 			isValid = false;
 		} else if(number.trim().length() == 0) {
 			isValid = false;
+		}
+		if(aws) {
+			if(!number.startsWith("+")) {
+				isValid = false;
+			}
 		}
 		return isValid;
 	}

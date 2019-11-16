@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,8 +38,11 @@ public class EmitAwsSMS extends EmitSMS {
 	
 	Properties properties = new Properties();
 	String senderId = "smap";
+	ResourceBundle localisation;
 	
-	public EmitAwsSMS(String senderId) {
+	public EmitAwsSMS(String senderId, ResourceBundle l) {
+		localisation = l;
+		
 		if(senderId != null) {
 			this.senderId = senderId;
 		}
@@ -55,7 +59,7 @@ public class EmitAwsSMS extends EmitSMS {
 		}
 	}
 	
-	// Send an email
+	// Send an sms
 	@Override
 	public String sendSMS( 
 			String number, 
@@ -63,8 +67,8 @@ public class EmitAwsSMS extends EmitSMS {
 		
 		String responseBody = null;
 		
-		if(!isValidPhoneNumber(number)) {
-			throw new Exception("Invalid phone number: " + number);
+		if(!isValidPhoneNumber(number, true)) {
+			throw new Exception(localisation.getString("msg_sms") + ": " + number);
 		}
 		
 		//create a new SNS client
@@ -86,11 +90,12 @@ public class EmitAwsSMS extends EmitSMS {
 	
 	private void sendSMSMessage(AmazonSNS snsClient, String message, 
 			String phoneNumber, Map<String, MessageAttributeValue> smsAttributes) {
-	        PublishResult result = snsClient.publish(new PublishRequest()
-	                        .withMessage(message)
-	                        .withPhoneNumber(phoneNumber)
-	                        .withMessageAttributes(smsAttributes));
-	        log.info("Message Id:" + result); // Prints the message ID.
+		
+	    PublishResult result = snsClient.publish(new PublishRequest()
+	    		.withMessage(message)
+	        .withPhoneNumber(phoneNumber)
+	        .withMessageAttributes(smsAttributes));
+	    log.info("Message Id:" + result); // Prints the message ID.
 	}
 
 }
