@@ -1,21 +1,19 @@
 package model;
 
-import java.util.HashMap;
 import java.util.logging.Logger;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Index;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PrimaryKey;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.ScanRequest;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
 
 public class DeviceTable {
 
@@ -34,20 +32,18 @@ public class DeviceTable {
 		log.info("DeviceTable: " + region + " : " + tableName);
 	}
 
-	public ScanResult getUserDevices(String server, String user) {
-		// Get registration entries for this user
-		HashMap<String, Condition> scanFilter = new HashMap<String, Condition>();
-		Condition conditionServer = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString())
-				.withAttributeValueList(new AttributeValue().withS(server));
-		Condition conditionUser = new Condition().withComparisonOperator(ComparisonOperator.EQ.toString())
-				.withAttributeValueList(new AttributeValue().withS(user));
-		scanFilter.put("smapServer", conditionServer);
-		scanFilter.put("userIdent", conditionUser);
-		ScanRequest scanRequest = new ScanRequest(tableName).withScanFilter(scanFilter);
-		log.info("scan: " + tableName + " with: " + scanFilter.toString());
-		ScanResult scanResult = client.scan(scanRequest);
-
-		return scanResult;
+	public ItemCollection<QueryOutcome> getUserDevices(String server, String user) {
+	
+		Table table = dynamoDB.getTable(tableName);
+		Index index = table.getIndex("userIdent-smapServer-index");
+		QuerySpec spec = new QuerySpec()
+			    .withKeyConditionExpression("userIdent = :v_user_ident and smapServer = :v_smap_server")
+			    .withValueMap(new ValueMap()
+			        .withString(":v_user_ident", user)
+			        .withString(":v_smap_server",server));
+		ItemCollection<QueryOutcome> items = index.query(spec);
+		
+		return items;
 	}
 	
 	/*

@@ -2,15 +2,16 @@ package org.smap.notifications.interfaces;
 
 import java.io.FileInputStream;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.ScanResult;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sns.model.MessageAttributeValue;
@@ -76,27 +77,25 @@ public class EmitDeviceNotification {
 
 		// Get the device registration ids associated with this user on this server
 		DeviceTable deviceTable = new DeviceTable(region, tableName);
-		ScanResult scanResult = deviceTable.getUserDevices(server, user);
+		ItemCollection<QueryOutcome> items = deviceTable.getUserDevices(server, user);
 
 		// Process the results
 		snsClientWrapper = new AmazonSNSClientWrapper(sns, deviceTable);
-		List<Map<String, AttributeValue>> items = scanResult.getItems();
-		log.info("Scan result: " + scanResult.toString());
-		log.info("Number of items: " + items.size());
-		if(items!= null && items.size() > 0) {
-			for(Map<String, AttributeValue> item : items) {
-				AttributeValue val = item.get("registrationId");
-				String token = val.getS();
+		Iterator<Item> iter = items.iterator(); 
+		int count = 0;
+		while (iter.hasNext()) {
+			count++;
+			Item item = iter.next();
+		    String token = item.getString("registrationId");
+			log.info("Token: " + token + " for " + server + ":" + user);
 
-				log.info("Token: " + token + " for " + server + ":" + user);
-
-				// Send the notification
-				Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
-				snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
-
-			}
-		} else {
-			log.info("No token found for: " + server + ":" + user);
+			// Send the notification
+			Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
+			snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
+		}
+		
+		if(count == 0) {
+			log.info("Token not found for " + server + ":" + user);
 		}
 
 	}
