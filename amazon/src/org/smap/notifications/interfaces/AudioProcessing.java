@@ -6,7 +6,9 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.rekognition.AmazonRekognition;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
@@ -17,21 +19,28 @@ import com.amazonaws.services.rekognition.model.S3Object;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.PutObjectResult;
+import com.amazonaws.services.transcribe.AmazonTranscribe;
+import com.amazonaws.services.transcribe.AmazonTranscribeClientBuilder;
+import com.amazonaws.services.transcribe.model.Media;
+import com.amazonaws.services.transcribe.model.StartTranscriptionJobRequest;
+import com.amazonaws.services.transcribe.model.StartTranscriptionJobResult;
+
 import tools.AmazonSNSClientWrapper;
 
 /*****************************************************************************
  * 
  * This file is part of SMAP.
- * Copyright Smap Consulting Pty Ltd
+ * Copyright Smap Pty Ltd
  * 
  ******************************************************************************/
 
 /*
- * Manage access to AWS rekognition service
+ * Manage access to AWS transcribe service
  */
-public class ImageProcessing {
+public class AudioProcessing {
 
-	private static Logger log = Logger.getLogger(ImageProcessing.class.getName());
+	private static Logger log = Logger.getLogger(AudioProcessing.class.getName());
 
 	Properties properties = new Properties();
 	String tableName = null;
@@ -40,7 +49,7 @@ public class ImageProcessing {
 	String bucketName = "smap-rekognition";
 	AmazonS3 s3 = null;
 
-	public ImageProcessing() {
+	public AudioProcessing() {
 		
 		// get properties file
 		
@@ -67,9 +76,9 @@ public class ImageProcessing {
 	/*
 	 * Get labels
 	 */
-	public String getLabels(String server, String user, String path, String format) {
+	public String getTranscript(String server, String user, String path, String format) {
 		
-		StringBuffer labels = new StringBuffer("");
+		StringBuffer transcript = new StringBuffer("");
 		// For testing on local host - can leave in final code
 		if(server.equals("smap")) {
 			server = "dev.smap.com.au";
@@ -78,40 +87,36 @@ public class ImageProcessing {
 		File file = new File(path);
 		
 		if(file.exists()) {
-			s3.putObject(new PutObjectRequest(bucketName, file.getName(), file));
+			PutObjectResult x = s3.putObject(new PutObjectRequest(bucketName, file.getName(), file));
 			
 			S3Object s3Object = new S3Object();
 			s3Object.setBucket(bucketName);
 			s3Object.setName(file.getName());
-			Image image = new Image().withS3Object(s3Object);
-			DetectLabelsRequest request = new DetectLabelsRequest();
-			request.withImage(image)
-	                .withMaxLabels(10)
-	                .withMinConfidence(80F);
 			
-			AmazonRekognition rekognitionClient = AmazonRekognitionClient.builder()
-					.withRegion(region)
+			ClientConfiguration clientConfig = new ClientConfiguration();
+	        clientConfig.setConnectionTimeout(60000);
+	        clientConfig.setMaxConnections(100);
+	        clientConfig.setSocketTimeout(60000);
+	        
+			AmazonTranscribe transcribeClient = AmazonTranscribeClientBuilder.standard()
 					.withCredentials(new ProfileCredentialsProvider())
+					.withRegion(region)
+					.withClientConfiguration(clientConfig)
 					.build();
 			
-			DetectLabelsResult result = rekognitionClient.detectLabels(request);
+			Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, file.getName()).toString());
+			StartTranscriptionJobRequest request = new StartTranscriptionJobRequest().withMedia(media);
+		    StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
+		    log.info("Transcribe job status: " + result.getTranscriptionJob().getTranscriptionJobStatus());
 			
-			if(format.equals("params")) {
-				labels.append(result.toString());
-			} else {
-				for(Label l : result.getLabels()) {
-					if(labels.length() > 0) {
-						labels.append(", ");
-					}
-					labels.append(l.getName());
-				}
-			}
+			transcript.append(result.toString());
+			
 			
 		} else {
-			labels.append("Error: image not found");
+			transcript.append("Error: audio not found");
 		}
 		
-		return labels.toString();
+		return transcript.toString();
 		
 	}
 
