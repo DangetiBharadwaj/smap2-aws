@@ -54,7 +54,7 @@ public class AudioProcessing {
 	Properties properties = new Properties();
 	String tableName = null;
 	String platformApplicationArn = null;
-	String defaultBucketName = "smap-rekognition";	// Used if file is not already in an S3 bucket
+	String defaultBucketName;	// Used if file is not already in an S3 bucket
 	AmazonS3 s3 = null;
 	AmazonTranscribe transcribeClient = null;
 
@@ -74,6 +74,7 @@ public class AudioProcessing {
 			try {fis.close();} catch (Exception e) {}
 		}
 		
+		defaultBucketName = "smap-ai-" + region;
 		// create a new S3 client
 		s3 = AmazonS3Client.builder()
 				.withRegion(region)
@@ -175,17 +176,23 @@ public class AudioProcessing {
 				bucketName = mediaBucket;
 			}
 				
-			// Generate the transcript	
-			log.info("Generating transcript for file: " + bucketName + filePath);
-			Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, filePath).toString());
-			StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
-					.withMedia(media)
-					.withLanguageCode("en-US")
-					.withTranscriptionJobName(job);
-				
-			StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
-			String status = result.getTranscriptionJob().getTranscriptionJobStatus();
-			log.info("Transcribe job status: " + status);			
+			// Generate the transcript
+			String status = null;
+			try {
+				log.info("Generating transcript for file: " + bucketName + filePath);
+				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, filePath).toString());
+				StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
+						.withMedia(media)
+						.withLanguageCode("en-US")
+						.withTranscriptionJobName(job);
+					
+				StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
+				status = result.getTranscriptionJob().getTranscriptionJobStatus();
+				log.info("Transcribe job status: " + status);	
+			} catch (Exception e) {
+				log.log(Level.SEVERE, e.getMessage(), e);
+				return e.getMessage();			
+			}
 			    
 			response.append(status);
 			
