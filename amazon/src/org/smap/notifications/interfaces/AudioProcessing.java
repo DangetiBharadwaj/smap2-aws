@@ -35,6 +35,7 @@ import com.amazonaws.services.transcribe.model.Transcript;
 import com.amazonaws.services.transcribe.model.TranscriptionJob;
 
 import tools.AmazonSNSClientWrapper;
+import tools.Utilities;
 
 /*****************************************************************************
  * 
@@ -52,13 +53,12 @@ public class AudioProcessing {
 
 	Properties properties = new Properties();
 	String tableName = null;
-	String region = null;
 	String platformApplicationArn = null;
 	String defaultBucketName = "smap-rekognition";	// Used if file is not already in an S3 bucket
 	AmazonS3 s3 = null;
 	AmazonTranscribe transcribeClient = null;
 
-	public AudioProcessing() {
+	public AudioProcessing(String region) {
 		
 		// get properties file
 		
@@ -67,7 +67,6 @@ public class AudioProcessing {
 			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
 			properties.load(fis);
 			tableName = properties.getProperty("userDevices_table");
-			region = properties.getProperty("userDevices_region");
 			platformApplicationArn = properties.getProperty("fieldTask_platform");
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Error reading properties", e);
@@ -109,9 +108,8 @@ public class AudioProcessing {
 		boolean awsSupported = false;
 		boolean convert = false;
 		String ext = "";
+		String serverFilePath = null;
 		String bucketName;	// The bucket we end up using. It will be either the default bucket or the media bucket
-
-		log.info("xxxxxxxxxxx Media Bucket: " + mediaBucket);
 		
 		// For testing on local host - can leave in final code
 		if(server.equals("smap")) {
@@ -125,7 +123,9 @@ public class AudioProcessing {
 		}
 		if(ext.equals("mp3") || ext.equals("mp4") || ext.equals("wav")) {
 			awsSupported = true;
+			log.info("Extension " + ext + " is nativly supported by AWS");
 		} else if(ext.equals("amr")) {
+			log.info("Extension " + ext + " will be converted to mp3");
 			convert = true;
 		}
 		
@@ -133,21 +133,41 @@ public class AudioProcessing {
 			
 			// Conversion
 			if(convert) {
+				String tempFilePath = null;
+				String convertedTempFilePath = null;
 				if(mediaBucket != null) {
-					// TODO get the file onto local disk to convert it
-					String tempFileName = "/smap/temp/" + UUID.randomUUID().toString() + "." + ext;
-					File tempFile = new File(tempFileName);
+					// Get the file onto local disk to convert it
+					String fBase = "/smap/temp/" + UUID.randomUUID().toString() + ".";
+					tempFilePath = fBase + ext;
+					convertedTempFilePath = fBase + "mp3";
+					
+					File tempFile = new File(tempFilePath);
+					log.info("Getting media file from s3 bucket: " + mediaBucket + " to : " + tempFilePath);
 					s3.getObject(new GetObjectRequest(mediaBucket, filePath, null), tempFile);
+				} else {
+					tempFilePath = basePath + filePath;
+					convertedTempFilePath = "/smap/temp/" + UUID.randomUUID().toString() + ".mp3";					
 				}
-				// TODO convert the file and update file path to the converted file
+				
+				// Convert the file and update file path to the converted file
+				log.info("Converting: " + tempFilePath + " to " + convertedTempFilePath);
+				if(!Utilities.convertMedia(tempFilePath, convertedTempFilePath)) {
+					String msg = localisation.getString("aws_t_conv_erro");
+					msg = msg.replace("%s1", tempFilePath);
+					return(msg);
+				}
+				serverFilePath = convertedTempFilePath;
+			} else if(mediaBucket == null) {
+				serverFilePath = basePath + filePath;
 			}
 			
 			// Put local files into remote default bucket
 			if(convert || mediaBucket == null) {
 				bucketName = defaultBucketName;
-				File file = new File(basePath + filePath);				
-				if(file.exists()) {				
-					s3.putObject(new PutObjectRequest(bucketName, file.getName(), file));
+				File file = new File(serverFilePath);				
+				if(file.exists()) {
+					log.info("Using local file " + filePath + " to bucket " + bucketName);
+					s3.putObject(new PutObjectRequest(bucketName, filePath, file));
 				} else {
 					return("Error: Audio File not found: " + file.getAbsolutePath());
 				}
@@ -156,6 +176,7 @@ public class AudioProcessing {
 			}
 				
 			// Generate the transcript	
+			log.info("Generating transcript for file: " + bucketName + filePath);
 			Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, filePath).toString());
 			StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
 					.withMedia(media)
