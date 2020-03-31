@@ -2,28 +2,14 @@ package org.smap.notifications.interfaces;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.ResponseMetadata;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.client.builder.AwsClientBuilder;
-import com.amazonaws.services.rekognition.AmazonRekognition;
-import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
-import com.amazonaws.services.rekognition.model.DetectLabelsResult;
-import com.amazonaws.services.rekognition.model.Image;
-import com.amazonaws.services.rekognition.model.Label;
-import com.amazonaws.services.rekognition.model.S3Object;
-import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectResult;
 import com.amazonaws.services.transcribe.AmazonTranscribe;
 import com.amazonaws.services.transcribe.AmazonTranscribeClientBuilder;
 import com.amazonaws.services.transcribe.model.GetTranscriptionJobRequest;
@@ -34,7 +20,6 @@ import com.amazonaws.services.transcribe.model.StartTranscriptionJobResult;
 import com.amazonaws.services.transcribe.model.Transcript;
 import com.amazonaws.services.transcribe.model.TranscriptionJob;
 
-import tools.AmazonSNSClientWrapper;
 import tools.Utilities;
 
 /*****************************************************************************
@@ -47,39 +32,13 @@ import tools.Utilities;
 /*
  * Manage access to AWS transcribe service
  */
-public class AudioProcessing {
+public class AudioProcessing extends AWSService {
 
-	private static Logger log = Logger.getLogger(AudioProcessing.class.getName());
-
-	Properties properties = new Properties();
-	String tableName = null;
-	String platformApplicationArn = null;
-	String defaultBucketName;	// Used if file is not already in an S3 bucket
-	AmazonS3 s3 = null;
 	AmazonTranscribe transcribeClient = null;
 
-	public AudioProcessing(String region) {
+	public AudioProcessing(String r) {
 		
-		// get properties file
-		
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
-			properties.load(fis);
-			tableName = properties.getProperty("userDevices_table");
-			platformApplicationArn = properties.getProperty("fieldTask_platform");
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Error reading properties", e);
-		} finally {
-			try {fis.close();} catch (Exception e) {}
-		}
-		
-		defaultBucketName = "smap-ai-" + region;
-		// create a new S3 client
-		s3 = AmazonS3Client.builder()
-				.withRegion(region)
-				.withCredentials(new ProfileCredentialsProvider())
-				.build();
+		super(r);
 		
 		// create a new transcribe client
 		ClientConfiguration clientConfig = new ClientConfiguration();
@@ -98,9 +57,8 @@ public class AudioProcessing {
 	 * Submit an audio job
 	 */
 	public String submitJob(ResourceBundle localisation, 
-			String server, 
 			String basePath, 
-			String filePath, 
+			String fileIdentifier, 	// How the file is identified in the bucket
 			String format, 
 			String job,
 			String mediaBucket) {
@@ -110,17 +68,11 @@ public class AudioProcessing {
 		boolean convert = false;
 		String ext = "";
 		String serverFilePath = null;
-		String bucketName;	// The bucket we end up using. It will be either the default bucket or the media bucket
-		
-		// For testing on local host - can leave in final code
-		if(server.equals("smap")) {
-			server = "dev.smap.com.au";
-		}
-		
+
 		// Check to see if the file type is supported
-		int idx = filePath.lastIndexOf('.');
+		int idx = fileIdentifier.lastIndexOf('.');
 		if(idx > 0) {
-			ext = filePath.substring(idx+1).toLowerCase();
+			ext = fileIdentifier.substring(idx+1).toLowerCase();
 		}
 		if(ext.equals("mp3") || ext.equals("mp4") || ext.equals("wav")) {
 			awsSupported = true;
@@ -144,9 +96,9 @@ public class AudioProcessing {
 					
 					File tempFile = new File(tempFilePath);
 					log.info("Getting media file from s3 bucket: " + mediaBucket + " to : " + tempFilePath);
-					s3.getObject(new GetObjectRequest(mediaBucket, filePath, null), tempFile);
+					s3.getObject(new GetObjectRequest(mediaBucket, fileIdentifier, null), tempFile);
 				} else {
-					tempFilePath = basePath + filePath;
+					tempFilePath = basePath + fileIdentifier;
 					convertedTempFilePath = "/smap/temp/" + UUID.randomUUID().toString() + ".mp3";					
 				}
 				
@@ -158,29 +110,19 @@ public class AudioProcessing {
 					return(msg);
 				}
 				serverFilePath = convertedTempFilePath;
+				mediaBucket = null;	// Need to upload
 			} else if(mediaBucket == null) {
-				serverFilePath = basePath + filePath;
+				serverFilePath = basePath + fileIdentifier;
 			}
 			
-			// Put local files into remote default bucket
-			if(convert || mediaBucket == null) {
-				bucketName = defaultBucketName;
-				File file = new File(serverFilePath);				
-				if(file.exists()) {
-					log.info("Using local file " + filePath + " to bucket " + bucketName);
-					s3.putObject(new PutObjectRequest(bucketName, filePath, file));
-				} else {
-					return("Error: Audio File not found: " + file.getAbsolutePath());
-				}
-			} else {
-				bucketName = mediaBucket;
-			}
+			// Put local files into remote default bucket			
+			String bucketName = setBucket(mediaBucket, serverFilePath, fileIdentifier);			
 				
 			// Generate the transcript
 			String status = null;
 			try {
-				log.info("Generating transcript for file: " + bucketName + filePath);
-				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, filePath).toString());
+				log.info("Generating transcript for file: " + bucketName + fileIdentifier);
+				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, fileIdentifier).toString());
 				StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
 						.withMedia(media)
 						.withLanguageCode("en-US")
