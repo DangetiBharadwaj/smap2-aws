@@ -76,9 +76,13 @@
  		<dependency>
     		<groupId>com.amazonaws</groupId>
    			<artifactId>aws-java-sdk-transcribe</artifactId>
-    		<version>1.11.745</version>
 		</dependency>
     
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-translate</artifactId>
+		</dependency>
+
 		<dependency>
 			<groupId>javax.activation</groupId>
 			<artifactId>activation</artifactId>
