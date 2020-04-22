@@ -35,14 +35,32 @@ public class TextProcessing extends AWSService {
                 .withRegion(region)
                 .build();
 			
+		String in = encodePlaceHolders(source);	// Add do not translates
+		
 		TranslateTextRequest request = new TranslateTextRequest()
-                .withText(source)
+                .withText(in)
                 .withSourceLanguageCode(sourceLanguage)
                 .withTargetLanguageCode(targetLanguage);
         TranslateTextResult result  = translate.translateText(request);
 		
-		return result.getTranslatedText();
+        String out = result.getTranslatedText();
+		out = decodePlaceHolders(out);
+		log.info("Translate to: " + out);
+		return out;
 		
+	}
+	
+	// Mark placeholders as do not translate
+	private String encodePlaceHolders(String in) {
+		return in.replace("${", "#${#");  
+	}
+	
+	// Decode placeholders as do not translate
+	private String decodePlaceHolders(String in) {
+		return in.replace("{ #", "{#")
+				.replace("$ {", "${")
+				.replace("# $", "#$")
+				.replace("#${#", "${");
 	}
 
 }

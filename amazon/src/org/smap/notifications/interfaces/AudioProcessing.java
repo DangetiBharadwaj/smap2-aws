@@ -59,7 +59,7 @@ public class AudioProcessing extends AWSService {
 	public String submitJob(ResourceBundle localisation, 
 			String basePath, 
 			String fileIdentifier, 	// How the file is identified in the bucket
-			String format, 
+			String fromLang, 
 			String job,
 			String mediaBucket) {
 		
@@ -125,7 +125,7 @@ public class AudioProcessing extends AWSService {
 				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, fileIdentifier).toString());
 				StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
 						.withMedia(media)
-						.withLanguageCode("en-US")
+						.withLanguageCode(fromLang)
 						.withTranscriptionJobName(job);
 					
 				StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
