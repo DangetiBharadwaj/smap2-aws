@@ -48,33 +48,40 @@ import tools.Utilities;
 public class S3 extends AWSService {
 
 	AmazonTranscribe transcribeClient = null;
-
-	public S3(String r) {
-		
-		super(r);
-		
+	AmazonS3URI s3uri = null;
 	
+	public S3(String r, String uri) {		
+		super(r);
+		s3uri = new AmazonS3URI(uri);
 	}
 	
-	public String getFromUrl(String uri) throws IOException {
-		AmazonS3URI s3uri = new AmazonS3URI(uri);
-		;
-		
+	public String get() throws Exception {
+		 
 		StringBuilder sb = new StringBuilder();
-		BufferedReader bufferedReader = null;
-		try {
-			
-			bufferedReader = new BufferedReader(new InputStreamReader(s3.getObject(new GetObjectRequest(s3uri.getBucket(), s3uri.getKey())).getObjectContent()));
-			
-			String line;
-			while ( (line = bufferedReader.readLine()) != null ) {
-				sb.append(line);
+		if(s3uri != null) {
+			BufferedReader bufferedReader = null;
+			try {
+				
+				bufferedReader = new BufferedReader(new InputStreamReader(s3.getObject(new GetObjectRequest(s3uri.getBucket(), s3uri.getKey())).getObjectContent()));
+				
+				String line;
+				while ( (line = bufferedReader.readLine()) != null ) {
+					sb.append(line);
+				}
+	
+			} finally {
+				if(bufferedReader != null) try{bufferedReader.close();} catch(Exception e) {}
 			}
-
-		} finally {
-			if(bufferedReader != null) try{bufferedReader.close();} catch(Exception e) {}
+		} else {
+			throw new Exception("S3 object not found");
 		}
 		return sb.toString();
+	}
+	
+	public void rm() throws IOException {
+		 
+		s3.deleteObject(s3uri.getBucket(), s3uri.getKey());
+		s3uri = null;
 	}
 
 }
