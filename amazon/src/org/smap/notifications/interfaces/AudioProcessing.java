@@ -12,13 +12,21 @@ import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.transcribe.AmazonTranscribe;
 import com.amazonaws.services.transcribe.AmazonTranscribeClientBuilder;
+import com.amazonaws.services.transcribe.model.GetMedicalTranscriptionJobRequest;
+import com.amazonaws.services.transcribe.model.GetMedicalTranscriptionJobResult;
 import com.amazonaws.services.transcribe.model.GetTranscriptionJobRequest;
 import com.amazonaws.services.transcribe.model.GetTranscriptionJobResult;
 import com.amazonaws.services.transcribe.model.Media;
+import com.amazonaws.services.transcribe.model.MedicalTranscript;
+import com.amazonaws.services.transcribe.model.MedicalTranscriptionJob;
+import com.amazonaws.services.transcribe.model.Specialty;
+import com.amazonaws.services.transcribe.model.StartMedicalTranscriptionJobRequest;
+import com.amazonaws.services.transcribe.model.StartMedicalTranscriptionJobResult;
 import com.amazonaws.services.transcribe.model.StartTranscriptionJobRequest;
 import com.amazonaws.services.transcribe.model.StartTranscriptionJobResult;
 import com.amazonaws.services.transcribe.model.Transcript;
 import com.amazonaws.services.transcribe.model.TranscriptionJob;
+import com.amazonaws.services.transcribe.model.Type;
 
 import tools.Utilities;
 
@@ -61,7 +69,8 @@ public class AudioProcessing extends AWSService {
 			String fileIdentifier, 	// How the file is identified in the bucket
 			String fromLang, 
 			String job,
-			String mediaBucket) {
+			String mediaBucket,
+			boolean medical) {
 		
 		StringBuffer response = new StringBuffer("");
 		boolean awsSupported = false;
@@ -123,13 +132,26 @@ public class AudioProcessing extends AWSService {
 			try {
 				log.info("Generating transcript for file: " + bucketName + fileIdentifier);
 				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, fileIdentifier).toString());
-				StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
-						.withMedia(media)
-						.withLanguageCode(fromLang)
-						.withTranscriptionJobName(job);
-					
-				StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
-				status = result.getTranscriptionJob().getTranscriptionJobStatus();
+				if(medical) {
+					StartMedicalTranscriptionJobRequest request = new StartMedicalTranscriptionJobRequest()
+							.withMedia(media)
+							.withLanguageCode(fromLang)
+							.withMedicalTranscriptionJobName(job)
+							.withOutputBucketName(bucketName)
+							.withType(Type.DICTATION)				// Parameterise
+							.withSpecialty(Specialty.PRIMARYCARE);	// TODO parameterise
+						
+					StartMedicalTranscriptionJobResult result = transcribeClient.startMedicalTranscriptionJob(request);
+					status = result.getMedicalTranscriptionJob().getTranscriptionJobStatus();
+				} else {
+					StartTranscriptionJobRequest request = new StartTranscriptionJobRequest()
+							.withMedia(media)
+							.withLanguageCode(fromLang)
+							.withTranscriptionJobName(job);
+						
+					StartTranscriptionJobResult result = transcribeClient.startTranscriptionJob(request);
+					status = result.getTranscriptionJob().getTranscriptionJobStatus();
+				}
 				log.info("Transcribe job status: " + status);	
 			} catch (Exception e) {
 				log.log(Level.SEVERE, e.getMessage(), e);
@@ -164,6 +186,29 @@ public class AudioProcessing extends AWSService {
 			
 			if(status != null && status.equals("COMPLETED")) {
 				Transcript t = tj.getTranscript();
+				uri = t.getTranscriptFileUri();
+			}
+			
+		}
+	
+		return uri;
+	}
+	
+	/*
+	 * Get the medical transcript
+	 */
+	public String getMedicalTranscriptUri(String job) {
+		String uri = null;
+		
+		GetMedicalTranscriptionJobRequest request = new GetMedicalTranscriptionJobRequest()
+				.withMedicalTranscriptionJobName(job);		
+		GetMedicalTranscriptionJobResult result = transcribeClient.getMedicalTranscriptionJob(request);
+		if(result != null) {
+			MedicalTranscriptionJob tj = result.getMedicalTranscriptionJob();
+			String status = tj.getTranscriptionJobStatus();
+			
+			if(status != null && status.equals("COMPLETED")) {
+				MedicalTranscript t = tj.getTranscript();
 				uri = t.getTranscriptFileUri();
 			}
 			
