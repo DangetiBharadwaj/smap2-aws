@@ -70,7 +70,8 @@ public class AudioProcessing extends AWSService {
 			String fromLang, 
 			String job,
 			String mediaBucket,
-			boolean medical) {
+			boolean medical,
+			String medType) {
 		
 		StringBuffer response = new StringBuffer("");
 		boolean awsSupported = false;
@@ -133,12 +134,13 @@ public class AudioProcessing extends AWSService {
 				log.info("Generating transcript for file: " + bucketName + fileIdentifier);
 				Media media=new Media().withMediaFileUri(s3.getUrl(bucketName, fileIdentifier).toString());
 				if(medical) {
+					Type type = (medType != null && medType.equals("conversation")) ? Type.CONVERSATION : Type.DICTATION;
 					StartMedicalTranscriptionJobRequest request = new StartMedicalTranscriptionJobRequest()
 							.withMedia(media)
 							.withLanguageCode(fromLang)
 							.withMedicalTranscriptionJobName(job)
 							.withOutputBucketName(bucketName)
-							.withType(Type.DICTATION)				// Parameterise
+							.withType(type)
 							.withSpecialty(Specialty.PRIMARYCARE);	// TODO parameterise
 						
 					StartMedicalTranscriptionJobResult result = transcribeClient.startMedicalTranscriptionJob(request);
