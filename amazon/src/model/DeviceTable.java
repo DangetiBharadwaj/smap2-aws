@@ -25,7 +25,8 @@ public class DeviceTable {
 
 	public DeviceTable(String region, String tableName) {
 		// create a new DynamoDB client
-		client= AmazonDynamoDBClient.builder().withRegion(region).withCredentials(new DefaultAWSCredentialsProviderChain())
+		log.info("Getting client: " + region);
+		client= AmazonDynamoDBClient.builder().withRegion(region).withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
 				.build();
 		dynamoDB = new DynamoDB(client);
 		this.tableName = tableName;

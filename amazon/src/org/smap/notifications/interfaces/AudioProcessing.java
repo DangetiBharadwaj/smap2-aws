@@ -6,6 +6,7 @@ import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.logging.Level;
 import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
@@ -55,7 +56,7 @@ public class AudioProcessing extends AWSService {
         clientConfig.setSocketTimeout(60000);
         
 		transcribeClient = AmazonTranscribeClientBuilder.standard()
-				.withCredentials(new ProfileCredentialsProvider())
+				.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
 				.withRegion(region)
 				.withClientConfiguration(clientConfig)
 				.build();

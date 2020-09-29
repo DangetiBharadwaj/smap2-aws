@@ -6,6 +6,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -56,9 +57,10 @@ public abstract class AWSService {
 		
 		defaultBucketName = "smap-ai-" + region;
 		// create a new S3 client
+		log.info("Getting s3 client for regions: " + region);
 		s3 = AmazonS3Client.builder()
 				.withRegion(region)
-				.withCredentials(new ProfileCredentialsProvider())
+				.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
 				.build();
         
 	}
@@ -72,7 +74,7 @@ public abstract class AWSService {
 				log.info("Using local file " + filePath + " to bucket " + bucketName);
 				s3.putObject(new PutObjectRequest(bucketName, filePath, file));
 			} else {
-				return("Error: Audio File not found: " + file.getAbsolutePath());
+				return("Error: Media File not found: " + file.getAbsolutePath());
 			}
 		} else {
 			bucketName = mediaBucket;

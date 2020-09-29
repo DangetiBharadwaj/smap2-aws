@@ -1,5 +1,6 @@
 package org.smap.notifications.interfaces;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.rekognition.AmazonRekognition;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
@@ -51,9 +52,10 @@ public class ImageProcessing extends AWSService {
 			
 		AmazonRekognition rekognitionClient = AmazonRekognitionClient.builder()
 			.withRegion(region)
-			.withCredentials(new ProfileCredentialsProvider())
+			.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
 			.build();
 			
+		log.info("get labels for region: " + region);
 		DetectLabelsResult result = rekognitionClient.detectLabels(request);
 			
 		if(format.equals("params")) {

@@ -8,6 +8,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
@@ -61,7 +62,7 @@ public class EmitDeviceNotification {
 		//create a new SNS client
 		sns = AmazonSNSClient.builder()
 				.withRegion(region)
-				.withCredentials(new ProfileCredentialsProvider())
+				.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
 				.build();
 	}
 
