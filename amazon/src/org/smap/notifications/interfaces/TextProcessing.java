@@ -3,7 +3,6 @@ package org.smap.notifications.interfaces;
 import java.util.ArrayList;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.services.translate.AmazonTranslate;
 import com.amazonaws.services.translate.AmazonTranslateClient;
 import com.amazonaws.services.translate.model.TranslateTextRequest;

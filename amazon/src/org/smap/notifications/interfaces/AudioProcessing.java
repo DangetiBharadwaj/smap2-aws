@@ -1,16 +1,12 @@
 package org.smap.notifications.interfaces;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.ResourceBundle;
 import java.util.UUID;
 import java.util.logging.Level;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.transcribe.AmazonTranscribe;
 import com.amazonaws.services.transcribe.AmazonTranscribeClientBuilder;
 import com.amazonaws.services.transcribe.model.GetMedicalTranscriptionJobRequest;
@@ -34,7 +30,7 @@ import tools.Utilities;
 /*****************************************************************************
  * 
  * This file is part of SMAP.
- * Copyright Smap Pty Ltd
+ * Copyright Smap Consulting Pty Ltd
  * 
  ******************************************************************************/
 
