@@ -102,7 +102,7 @@ public class AudioProcessing extends AWSService {
 					convertedTempFilePath = fBase + "mp3";
 					
 					File tempFile = new File(tempFilePath);
-					log.info("Getting media file from s3 bucket: " + mediaBucket + " to : " + tempFilePath);
+					log.info("Getting media file from s3 bucket: " + mediaBucket + " " + fileIdentifier + " to : " + tempFilePath);
 					s3.getObject(new GetObjectRequest(mediaBucket, fileIdentifier, null), tempFile);
 				} else {
 					tempFilePath = basePath + fileIdentifier;

@@ -42,12 +42,12 @@ public class EmitDeviceNotification {
 	String platformApplicationArn = null;
 	AmazonSNS sns = null;
 
-	public EmitDeviceNotification() {
+	public EmitDeviceNotification(String awsPropertiesFile) {
 
 		// get properties file
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
+			fis = new FileInputStream(awsPropertiesFile);
 			properties.load(fis);
 			tableName = properties.getProperty("userDevices_table");
 			region = properties.getProperty("userDevices_region");
