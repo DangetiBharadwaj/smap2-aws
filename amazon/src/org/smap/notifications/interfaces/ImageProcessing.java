@@ -21,8 +21,8 @@ import com.amazonaws.services.rekognition.model.S3Object;
  */
 public class ImageProcessing extends AWSService {
 
-	public ImageProcessing(String region) {
-		super(region);	
+	public ImageProcessing(String region, String basePath) {
+		super(region, basePath);	
 	}
 
 	/*

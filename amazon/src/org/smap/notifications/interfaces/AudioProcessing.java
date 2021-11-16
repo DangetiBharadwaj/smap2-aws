@@ -41,9 +41,9 @@ public class AudioProcessing extends AWSService {
 
 	AmazonTranscribe transcribeClient = null;
 
-	public AudioProcessing(String r) {
+	public AudioProcessing(String r, String basePath) {
 		
-		super(r);
+		super(r, basePath);
 		
 		// create a new transcribe client
 		ClientConfiguration clientConfig = new ClientConfiguration();

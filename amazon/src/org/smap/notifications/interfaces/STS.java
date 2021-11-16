@@ -23,9 +23,9 @@ public class STS extends AWSService {
 
 	AWSSecurityTokenService stsClient = null;
 
-	public STS(String r) {
+	public STS(String r, String basePath) {
 		
-		super(r);
+		super(r, basePath);
 		
 		// create a new transcribe client
 		ClientConfiguration clientConfig = new ClientConfiguration();
@@ -41,10 +41,10 @@ public class STS extends AWSService {
                 .build();
 	}
 	
-	public BasicSessionCredentials getSessionCredentials() {
+	public BasicSessionCredentials getSessionCredentials(String roleARN, String roleSessionName) {
 		
-		final String roleARN = "arn:aws:iam::439804189189:role/dashboard_role";
-		final String roleSessionName = "cuso";
+		//final String roleARN = "arn:aws:iam::439804189189:role/dashboard_role";
+		//final String roleSessionName = "cuso";
 		
 		
 		AssumeRoleRequest roleRequest = new AssumeRoleRequest()

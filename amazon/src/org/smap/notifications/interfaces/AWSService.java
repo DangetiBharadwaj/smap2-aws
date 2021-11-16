@@ -30,21 +30,23 @@ public abstract class AWSService {
 	String platformApplicationArn = null;
 	String defaultBucketName;	// Used if file is not already in an S3 bucket
 	String region;
+	String basePath;
 	AmazonS3 s3 = null;
 	
 
-	public AWSService(String r) {
+	public AWSService(String r, String basePath) {
 		
 		if(r != null) {
 			this.region = r;
 		} else {
 			this.region = "us-east-1";
 		}
+		this.basePath = basePath;
 		
 		// get properties file		
 		FileInputStream fis = null;
 		try {
-			fis = new FileInputStream("/smap_bin/resources/properties/aws.properties");
+			fis = new FileInputStream(basePath + "_bin/resources/properties/aws.properties");
 			properties.load(fis);
 			tableName = properties.getProperty("userDevices_table");
 			platformApplicationArn = properties.getProperty("fieldTask_platform");

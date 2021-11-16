@@ -22,8 +22,8 @@ public class TextProcessing extends AWSService {
 
 	private final int MAX_LENGTH = 5000 - 2;		// Maximum number of bytes accepted by AWS, allow two bytes to add a new line back in
 	
-	public TextProcessing(String region) {
-		super(region);	
+	public TextProcessing(String region, String basePath) {
+		super(region, basePath);	
 	}
 
 	/*

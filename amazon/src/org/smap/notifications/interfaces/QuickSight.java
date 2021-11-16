@@ -34,9 +34,9 @@ public class QuickSight extends AWSService {
 	final String dashboardId = "3c0205d9-c84c-49bd-8112-20e81c16f619";
 	final String awsAccountId = "439804189189";
 
-	public QuickSight(String r, BasicSessionCredentials credentials) {
+	public QuickSight(String r, BasicSessionCredentials credentials, String basePath) {
 		
-		super(r);
+		super(r, basePath);
 		
 		// create a new transcribe client
 		ClientConfiguration clientConfig = new ClientConfiguration();
