@@ -3,9 +3,7 @@ package org.smap.notifications.interfaces;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.quicksight.AmazonQuickSight;
 import com.amazonaws.services.quicksight.AmazonQuickSightClientBuilder;
 import com.amazonaws.services.quicksight.model.CreateGroupMembershipRequest;
@@ -31,12 +29,19 @@ import com.amazonaws.services.quicksight.model.ResourceNotFoundException;
 public class QuickSight extends AWSService {
 
 	AmazonQuickSight quicksightClient = null;
-	final String dashboardId = "3c0205d9-c84c-49bd-8112-20e81c16f619";
-	final String awsAccountId = "439804189189";
+	//final String dashboardId = "3c0205d9-c84c-49bd-8112-20e81c16f619";
+	//final String awsAccountId = "439804189189";
+	String dashboardId = null;
+	String awsAccountId = null;
 
-	public QuickSight(String r, BasicSessionCredentials credentials, String basePath) {
-		
+	public QuickSight(String r, BasicSessionCredentials credentials, String basePath,
+			String dashboardId,
+			String awsAccountId) {	
+
 		super(r, basePath);
+		
+		this.dashboardId = dashboardId;
+		this.awsAccountId = awsAccountId;
 		
 		// create a new transcribe client
 		ClientConfiguration clientConfig = new ClientConfiguration();
