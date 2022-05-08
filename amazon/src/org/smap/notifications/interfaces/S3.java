@@ -1,11 +1,14 @@
 package org.smap.notifications.interfaces;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import com.amazonaws.Request;
 import com.amazonaws.services.s3.AmazonS3URI;
 import com.amazonaws.services.s3.model.GetObjectRequest;
-import com.amazonaws.services.transcribe.AmazonTranscribe;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 /*****************************************************************************
  * 
@@ -15,18 +18,21 @@ import com.amazonaws.services.transcribe.AmazonTranscribe;
  ******************************************************************************/
 
 /*
- * Manage access to AWS transcribe service
+ * Manage access to AWS S3 service
  */
 public class S3 extends AWSService {
 
-	AmazonTranscribe transcribeClient = null;
+	//AmazonTranscribe transcribeClient = null;
 	AmazonS3URI s3uri = null;
 	
-	public S3(String r, String uri, String basePath) {		
+	public S3(String r, String uri, String basePath) {	
 		super(r, basePath);
 		s3uri = new AmazonS3URI(uri);
 	}
 	
+	/*
+	 * Get an s3 object as a string
+	 */
 	public String get() throws Exception {
 		 
 		StringBuilder sb = new StringBuilder();
@@ -55,5 +61,6 @@ public class S3 extends AWSService {
 		s3.deleteObject(s3uri.getBucket(), s3uri.getKey());
 		s3uri = null;
 	}
+	
 
 }
