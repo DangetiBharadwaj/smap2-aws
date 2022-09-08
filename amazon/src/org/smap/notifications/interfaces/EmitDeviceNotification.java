@@ -1,6 +1,7 @@
 package org.smap.notifications.interfaces;
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -82,20 +83,35 @@ public class EmitDeviceNotification {
 		// Process the results
 		snsClientWrapper = new AmazonSNSClientWrapper(sns, deviceTable);
 		Iterator<Item> iter = items.iterator(); 
+		//ArrayList<String> obsoleteTokens = new ArrayList<String> ();
 		int count = 0;
 		while (iter.hasNext()) {
 			count++;
 			Item item = iter.next();
-		    String token = item.getString("registrationId");
+			String token = item.getString("registrationId");
 			log.info("Token: " + token + " for " + server + ":" + user);
 
 			// Send the notification
 			Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
 			snsClientWrapper.sendNotification(Platform.GCM, token, attrsMap, platformApplicationArn);
+			
+			//obsoleteTokens.add(token);
 		}
 		
 		if(count == 0) {
 			log.info("Token not found for " + server + ":" + user);
+		} else if(count > 1) {
+			// Delete old tokens
+			// This relies on tokens being returned in the reverse order to which they were added
+			/*
+			 * This seems to delete the firebase endpoint
+			 *
+			for(int i = obsoleteTokens.size() - 1; i> 0; i--) {
+				String token = obsoleteTokens.get(i);
+				log.info("+++ Deleting obsolete token: " + token);
+				deviceTable.deleteToken(obsoleteTokens.get(i));
+			}
+			*/
 		}
 
 	}

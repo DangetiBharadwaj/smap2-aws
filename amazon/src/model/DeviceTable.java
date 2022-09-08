@@ -36,6 +36,7 @@ public class DeviceTable {
 	public ItemCollection<QueryOutcome> getUserDevices(String server, String user) {
 	
 		Table table = dynamoDB.getTable(tableName);
+		
 		Index index = table.getIndex("userIdent-smapServer-index");
 		QuerySpec spec = new QuerySpec()
 			    .withKeyConditionExpression("userIdent = :v_user_ident and smapServer = :v_smap_server")

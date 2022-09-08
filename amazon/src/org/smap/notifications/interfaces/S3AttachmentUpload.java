@@ -1,6 +1,8 @@
 package org.smap.notifications.interfaces;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.logging.Logger;
@@ -9,6 +11,8 @@ import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
 
 /*
  * Static class to upload attachments to S3 
@@ -30,23 +34,8 @@ public class S3AttachmentUpload {
 	public static void put(String basePath, String filePath) {
 		
 		if(s3Enabled) {
-			/*
-			 * Initialise first time through
-			 */
-			if(s3 == null) {
-				
-				bucket = getSettingFromFile(basePath + "/settings/bucket");
-				if(bucket == null) {
-					s3Enabled = false;
-				} else {
-					region = getSettingFromFile(basePath + "/settings/region");
-					
-					s3 = AmazonS3Client.builder()
-							.withRegion(region)
-							.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
-							.build();
-				}
-			}
+			
+			initialise(basePath);		// Initialise first time through
 			
 			/*
 			 * Send the file
@@ -61,6 +50,49 @@ public class S3AttachmentUpload {
 			}
 		}
 		
+	}
+	
+	public static void get(String basePath, String filePath) throws IOException {
+		
+		if(s3Enabled) {
+			
+			initialise(basePath);		// Initialise first time through
+			
+			/*
+			 * Get the file
+			 */
+			String s3Path = filePath.substring(basePath.length() + 1);
+			log.info("Getting archived XML file " + filePath + " from bucket " + bucket + " in region " + region);
+			S3Object o = s3.getObject(bucket, s3Path);
+			S3ObjectInputStream s3is = o.getObjectContent();
+	        FileOutputStream fos = new FileOutputStream(new File(filePath));
+	        byte[] read_buf = new byte[1024];
+	        int read_len = 0;
+	        while ((read_len = s3is.read(read_buf)) > 0) {
+	        	fos.write(read_buf, 0, read_len);
+	        }
+	        s3is.close();
+	        fos.close();
+			
+		}
+		
+	}
+	
+	private static void initialise(String basePath) {
+		if(s3 == null) {
+			
+			bucket = getSettingFromFile(basePath + "/settings/bucket");
+			if(bucket == null) {
+				s3Enabled = false;
+			} else {
+				region = getSettingFromFile(basePath + "/settings/region");
+				
+				s3 = AmazonS3Client.builder()
+						.withRegion(region)
+						.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
+						.build();
+			}
+		}
 	}
 	
 	private static String getSettingFromFile(String filePath) {

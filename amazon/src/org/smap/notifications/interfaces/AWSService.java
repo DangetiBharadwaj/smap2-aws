@@ -58,7 +58,7 @@ public abstract class AWSService {
 		
 		defaultBucketName = "smap-ai-" + region;
 		// create a new S3 client
-		log.info("Getting s3 client for regions: " + region);
+		//log.info("Getting s3 client for regions: " + region);
 		s3 = AmazonS3Client.builder()
 				.withRegion(region)
 				.withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
