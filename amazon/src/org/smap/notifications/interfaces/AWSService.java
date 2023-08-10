@@ -25,9 +25,6 @@ public abstract class AWSService {
 
 	static Logger log = Logger.getLogger(AWSService.class.getName());
 
-	Properties properties = new Properties();
-	String tableName = null;
-	String platformApplicationArn = null;
 	String defaultBucketName;	// Used if file is not already in an S3 bucket
 	String region;
 	String basePath;
@@ -42,19 +39,6 @@ public abstract class AWSService {
 			this.region = "us-east-1";
 		}
 		this.basePath = basePath;
-		
-		// get properties file		
-		FileInputStream fis = null;
-		try {
-			fis = new FileInputStream(basePath + "_bin/resources/properties/aws.properties");
-			properties.load(fis);
-			tableName = properties.getProperty("userDevices_table");
-			platformApplicationArn = properties.getProperty("fieldTask_platform");
-		} catch (Exception e) {
-			log.log(Level.SEVERE, "Error reading properties", e);
-		} finally {
-			try {fis.close();} catch (Exception e) {}
-		}
 		
 		defaultBucketName = "smap-ai-" + region;
 		// create a new S3 client
@@ -72,7 +56,6 @@ public abstract class AWSService {
 			bucketName = defaultBucketName;
 			File file = new File(serverFilePath);				
 			if(file.exists()) {
-				log.info("Using local file " + filePath + " to bucket " + bucketName);
 				s3.putObject(new PutObjectRequest(bucketName, filePath, file));
 			} else {
 				return("Error: Media File not found: " + file.getAbsolutePath());

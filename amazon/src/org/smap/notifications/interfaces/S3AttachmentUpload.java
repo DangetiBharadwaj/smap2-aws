@@ -31,7 +31,7 @@ public class S3AttachmentUpload {
 	
 	static Logger log = Logger.getLogger(AWSService.class.getName());
 	
-	public static void put(String basePath, String filePath) {
+	public static void put(String basePath, String filePath) throws Exception {
 		
 		if(s3Enabled) {
 			
