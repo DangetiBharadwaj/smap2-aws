@@ -88,7 +88,7 @@ public class TextProcessing extends AWSService {
 	}
 	
 	/*
-	 * Spli the input string into fragments less than the maximum
+	 * Split the input string into fragments less than the maximum
 	 */
 	private ArrayList<String> getTextFragments(String in) throws Exception {
 		ArrayList<String> out = new ArrayList<String> ();
