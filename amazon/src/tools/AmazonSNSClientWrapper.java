@@ -75,7 +75,7 @@ public class AmazonSNSClientWrapper {
 		publishRequest.setTargetArn(endpointArn);
 
 		// Display the message that will be sent to the endpoint/
-		log.info("{Message Body: " + message + "}");
+		//log.info("{Message Body: " + message + "}");
 		StringBuilder builder = new StringBuilder();
 		builder.append("{Message Attributes: ");
 		for (Map.Entry<String, MessageAttributeValue> entry : notificationAttributes.entrySet()) {
@@ -83,7 +83,7 @@ public class AmazonSNSClientWrapper {
 		}
 		builder.deleteCharAt(builder.length() - 1);
 		builder.append("}");
-		log.info(builder.toString());
+		//log.info(builder.toString());
 
 		publishRequest.setMessage(message);
 
@@ -113,9 +113,9 @@ public class AmazonSNSClientWrapper {
 	
 			// Publish a push notification to an Endpoint.
 			PublishResult publishResult = publish(platformEndpointResult.getEndpointArn(), platform, attrsMap, platformToken);
-			if(publishResult != null) {
-				log.info("Published! \n{MessageId=" + publishResult.getMessageId() + "}");
-			}
+			//if(publishResult != null) {
+			//	log.info("Published! \n{MessageId=" + publishResult.getMessageId() + "}");
+			//}
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Failed to publish to end point", e);

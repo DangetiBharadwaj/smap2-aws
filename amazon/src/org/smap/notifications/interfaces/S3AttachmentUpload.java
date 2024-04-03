@@ -43,7 +43,7 @@ public class S3AttachmentUpload {
 			File file = new File(filePath);	
 			String s3Path = filePath.substring(basePath.length() + 1);
 			if(file.exists()) {
-				log.info("Using local file " + filePath + " to bucket " + bucket + " in region " + region);
+				//log.info("Using local file " + filePath + " to bucket " + bucket + " in region " + region);
 				s3.putObject(new PutObjectRequest(bucket, s3Path, file));
 			} else {
 				log.info("Error uploading to S3: File not found: " + file.getAbsolutePath());

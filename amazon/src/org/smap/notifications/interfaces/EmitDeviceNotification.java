@@ -89,7 +89,7 @@ public class EmitDeviceNotification {
 			count++;
 			Item item = iter.next();
 			String token = item.getString("registrationId");
-			log.info("Token: " + token + " for " + server + ":" + user);
+			//log.info("Token: " + token + " for " + server + ":" + user);
 
 			// Send the notification
 			Map<Platform, Map<String, MessageAttributeValue>> attrsMap = new HashMap<Platform, Map<String, MessageAttributeValue>> ();
