@@ -43,7 +43,6 @@ public class S3AttachmentUpload {
 			File file = new File(filePath);	
 			String s3Path = filePath.substring(basePath.length() + 1);
 			if(file.exists()) {
-				//log.info("Using local file " + filePath + " to bucket " + bucket + " in region " + region);
 				s3.putObject(new PutObjectRequest(bucket, s3Path, file));
 			} else {
 				log.info("Error uploading to S3: File not found: " + file.getAbsolutePath());
@@ -78,6 +77,23 @@ public class S3AttachmentUpload {
 		
 	}
 	
+	/*
+	 * Check to see if a file exists
+	 */
+	public static boolean exists(String basePath, String filePath) {
+		boolean exists = false;
+		
+		if(s3Enabled) {
+			
+			initialise(basePath);		// Initialise first time through
+			
+			String s3Path = filePath.substring(basePath.length() + 1);
+			log.info("Checking for file on S3 " + filePath + " from bucket " + bucket + " in region " + region);
+			exists = s3.doesObjectExist(bucket, s3Path);
+		}
+		return exists;		
+	}
+	
 	private static void initialise(String basePath) {
 		if(s3 == null) {
 			
@@ -109,4 +125,5 @@ public class S3AttachmentUpload {
 
 		return setting;
 	}
+	
 }

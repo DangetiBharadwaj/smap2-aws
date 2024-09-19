@@ -113,9 +113,9 @@ public class AmazonSNSClientWrapper {
 	
 			// Publish a push notification to an Endpoint.
 			PublishResult publishResult = publish(platformEndpointResult.getEndpointArn(), platform, attrsMap, platformToken);
-			//if(publishResult != null) {
-			//	log.info("Published! \n{MessageId=" + publishResult.getMessageId() + "}");
-			//}
+			if(publishResult != null) {
+				log.info("Published! \n{MessageId=" + publishResult.getMessageId() + "}");
+			}
 			
 		} catch (Exception e) {
 			log.log(Level.SEVERE, "Failed to publish to end point", e);

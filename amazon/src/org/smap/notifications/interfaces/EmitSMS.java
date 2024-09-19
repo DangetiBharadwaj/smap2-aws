@@ -13,7 +13,7 @@ Copyright Smap Pty Ltd
  ******************************************************************************/
 
 /*
- * Manage the table that stores details on the forwarding of data onto other systems
+ * Manage sending of SMS messages
  */
 public abstract class EmitSMS {
 	
@@ -25,7 +25,7 @@ public abstract class EmitSMS {
 			String content) throws Exception;
 	
 	/*
-	 * Validate an email
+	 * Validate a phone number
 	 */
 	protected boolean isValidPhoneNumber(String number, boolean aws) {
 		boolean isValid = true;
